@@ -20,3 +20,19 @@ So the scraping workflow will look something like so:
 3. For each Tournament:
     1. Load all teams competing's tournament results page
     2. Scrape results from that
+
+
+### Switching to Selenium
+When trying to scrape the USAU results website, the searching functionality turns
+out to be an archaic design such that the whole dataset is not loaded to the page
+to begin with so we need to submit the correct webform.
+
+The other big issue is that the webform returns a whole html page but importantly,
+dynamically loads it.
+
+Because of these two reasons, instead of using the simpler BeautifulSoup, we will
+use the webdriver driven package called Selenium. We will use this to interact
+with the website like submitting the correct settings into the search
+functionality. And it allows us to go to the next page since it is not a seperate
+url but instead calls a javascript function that loads the html of the next page
+into our current page.
