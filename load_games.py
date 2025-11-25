@@ -1,3 +1,5 @@
+from typing import NamedTuple
+from numpy.char import isdigit
 import requests
 
 from time import sleep
@@ -17,6 +19,15 @@ options = Options()
 #options.add_argument("--headless")
 options.add_argument("--blink-settings=imagesEnabled=false")
 driver = webdriver.Chrome(options=options)
+
+RESULT_DATE = 0
+RESULT_SCORE = 1
+RESULT_OPP = 2
+
+SCRAPE_PERIOD = 60*60
+# 5 pages, 85 tournaments, 100 events x 20 teams
+TOTAL_ACTIONS = 5+85+(100*20)
+DELAY_BETWEEN_ACTIONS = SCRAPE_PERIOD / TOTAL_ACTIONS
 
 
 def get_tournament_urls_on_page(cur_page: WebDriver) -> list[str]:
@@ -136,12 +147,49 @@ def get_results(tournament_url) -> pd.DataFrame:
     pass
 
 def get_team_results(team_event_url) -> pd.DataFrame:
-    pass
+    driver.get(team_event_url)
+
+    results_table = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "CT_Right_0_gvEventScheduleScores"))
+    )
+
+    tournament_name = driver.find_element(By.ID, "CT_Right_1_lblHeading").text
+
+    unformatted_team_name = driver.find_element(By.ID, "CT_Main_0_ucTeamDetails_lnkTeamName")\
+        .text
+
+    # remove acroym and space between
+    team_name = unformatted_team_name.split('(')[0].strip()
+    if "-B" in team_name:
+        team_name = team_name.replace("-B", "") # remove "-B"
+        team_name += " [B]"
+
+    # cull first element since it is header row
+    result_elements = results_table.find_elements(By.TAG_NAME, "tr")[1:]
+
+    #Result = NamedTuple('Result', ['date_str', 'tournament', 'score_tuple', 'team', 'opponent'])
+    results = []
+    for result_element in result_elements:
+        date_str = result_element\
+            .find_elements(By.TAG_NAME, "span")[0]\
+            .text
+        score_str = result_element\
+            .find_elements(By.TAG_NAME, "span")[1]\
+            .text
+        score_tuple = (score_str.split()[0], score_str.split()[-1])
+        opponent = result_element\
+            .find_elements(By.TAG_NAME, "span")[2]\
+            .text
+
+        if not score_tuple[0].isdigit() and not score_tuple[1].isdigit():
+            # if score is not reported, skip
+            continue
+
+        results.append([date_str, tournament_name, score_tuple, team_name, opponent])
+
+    return pd.DataFrame(results, \
+        columns=["Date String", "Tournament", "Score(F,A)", "Team Name", "Opponent"])
 
 def get_2025_results() -> pd.DataFrame:
     pass
 
-urls = get_2025_tournaments()
-event_urls = []
-for tournament_url in urls:
-    event_urls += get_event_urls(tournament_url)
