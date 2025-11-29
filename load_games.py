@@ -1,4 +1,3 @@
-from functools import total_ordering
 import requests
 
 from time import sleep, time
@@ -31,7 +30,6 @@ SCRAPE_PERIOD = 1*SEC_PER_HR
 TOTAL_ACTIONS = 1238
 # 1-0.78 = 0.22, expected time spend fufilling requests
 DELAY_BETWEEN_ACTIONS = (SCRAPE_PERIOD / TOTAL_ACTIONS)*0.78
-
 
 
 # total request count
