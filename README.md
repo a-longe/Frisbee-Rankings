@@ -100,3 +100,26 @@ For example Team A has a rating of 1000 points, while Team B has a rating of 500
 points. For a given game where Team B beats Team A with a rating difference of
 200 points. The game rating for this given game will be 800 and 700 for Teams A
 and B respectively
+
+So, to store that information, we will add 5 additional columns, the 'home' team
+rating, the raw game score differential, the date weight, the score weight and
+finally the effect of a game.
+
+Now, the ratings dataframe will have the following columns:
+```
+"Date String", "Tournament", "Score(F,A)", "Team Name", "Opponent", "Team Rating",
+   "Game Rating", "Date Weight", "Score Weight", "Game Effect"
+```
+At the start of each iteration, we will calculate the game rating of each game,
+then update the Team Rating column. Since the Date Weight and Score Weight are
+constant, we dont need to worry about updating those.
+
+### Performance
+The first working ratings test of the 2025 season, minus post season (oops) is
+taking about 12 seconds per iteration, and we have the threshold set to 0.01. It
+took 177 iterations to reach the threshold. Also, more importanly, it looks like
+I've made an error in some way and the ratings are _way_ lower than expected, on
+average around the 500 mark.
+
+After fixing this issue I was able to use the cProfile Python module to profile
+the algorithm and find what lines of code were using the most reasorces.
